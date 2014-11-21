@@ -16,21 +16,15 @@ struct node{
     //struct node *Previous;
 };
 //Function to add and event to the queue
-//This function requires and input a pointer to the event to be added and the pointer the first location in the queue and outputs the pointer to the new first event
-struct node *addQ(void *, struct node *);
+//This function requires and input a pointer to the object to be added and the pointer the first location in the queue and a pointer to the last element of the queue
+addQ(void *, struct node *,struct node *);
 
 //Function to remove an event from the priority queue
-//This function requires and input of the pointer to the front of the priority queue and returns the pointer to the new first location
+//This function requires an input of the pointer to the first element of the queue and returns the pointer to the object that was removed
 struct node *removeQ(struct node *);
 //A function to print all of the elements of the queue in timestamp order
 //THis function requires and input of the pointer to the first element in the queue
 void print_all(struct node *);
-
-struct node *searchQ(struct node *PrioQ, int nums);
-
-struct node *addQ_max(void *a, struct node *PrioQ);
-
-struct node *removeQ_ran(struct node *PrioQ, int nums);
 
 
 #endif /* QUEUE_2_H_ */
