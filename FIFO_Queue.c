@@ -12,7 +12,8 @@
 //struct Event *PrioQ = NULL;
 //struct Event *e;
 
-void print_all(struct node *First){
+int count_all(struct node *First){
+    int count = 0;
     if (First==NULL)
     {
         printf("empty queue");
@@ -20,10 +21,11 @@ void print_all(struct node *First){
         struct node *ptr= First;
         while (ptr != NULL) //print each element of the queue
         {
-            printf ("%d\n",ptr->d);
+            count = count+1;
             ptr=ptr->Next;
         }
     }
+    return count;
 }
 void addQ(void *a, struct node *First, struct node *Last){
     
@@ -31,12 +33,12 @@ void addQ(void *a, struct node *First, struct node *Last){
     struct node *e;
     e = a;
     if (First == NULL){ //if there are no events in the Queue
-        //printf("in the if\n");
+        printf("in the if\n");
         First = e; //First and last point to the same element
         Last = e;
         e->Next = NULL;
     }else{
-        //printf("else3\n");
+        printf("else3\n");
         Last->Next = e;
         Last = e;
         e->Next = NULL;

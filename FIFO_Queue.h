@@ -21,7 +21,7 @@ void addQ(void *, struct node *,struct node *);
 struct node *removeQ(struct node *);
 //A function to print all of the elements of the queue in timestamp order
 //THis function requires and input of the pointer to the first element in the queue
-void print_all(struct node *);
+int count_all(struct node *);
 
 
 #endif /* FIFO_QUEUE_H_ */
