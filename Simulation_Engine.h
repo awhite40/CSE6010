@@ -15,7 +15,7 @@ void schedule(double ts, void *data, void (*cb)(void *));
 
 //This function runs the simulation engine while loop
 //This function requires an input of type double to indicate how long the simulation should run
-void RunSim(double Finish);
+void RunSim(void);
 
 
 //Function to find the current time

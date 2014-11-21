@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include "FIFo_Queue.h"
 
 #define COUnits 500 //number of units to process before doing a changeover to the other type
 #define RIGHT 1
@@ -60,7 +61,7 @@ void Stamping(struct Data *e){
     Time = Time + 20; //the cycle time for stamping is 20 seconds, so add 20 sec to the total running time
     e->Process = SWeld1;
     COCounter++;
-    InsertQueue(e);
+    addQ(e);
 }
 
 void SpotWeld1(struct Data *e){

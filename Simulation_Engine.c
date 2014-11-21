@@ -39,8 +39,7 @@ double CurrentTime(void){
     //printf("Now is %f\n", Now);
 	return Now;
 }
-void RunSim(double Finish){
-	while (Now <=Finish){
+void RunSim(void){
 		struct Event *E;
 		E = malloc(sizeof(struct Event));
         E = PrioQ;
@@ -56,5 +55,5 @@ void RunSim(double Finish){
 		
 		E->callback(E->AppData);
 		free (E);
-	}
+	
 }

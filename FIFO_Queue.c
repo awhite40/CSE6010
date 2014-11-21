@@ -25,7 +25,7 @@ void print_all(struct node *First){
         }
     }
 }
-addQ(void *a, struct node *First, struct node *Last){
+void addQ(void *a, struct node *First, struct node *Last){
     
     //printf("Start add\n");
     struct node *e;
