@@ -11,17 +11,20 @@
 struct node{
     void *p;
     struct node *Next;
+    struct node *Last;
 };
 //Function to add and event to the queue
 //This function requires and input a pointer to the object to be added and the pointer the first location in the queue and a pointer to the last element of the queue
-void addQ(void *, struct node *,struct node *);
+void addQ(void *, struct node *);
 
 //Function to remove an event from the priority queue
 //This function requires an input of the pointer to the first element of the queue and returns the pointer to the object that was removed
-struct node *removeQ(struct node *);
+void *removeQ(struct node *);
 //A function to print all of the elements of the queue in timestamp order
 //THis function requires and input of the pointer to the first element in the queue
 int count_all(struct node *);
+
+struct node *CreateQ(void);
 
 
 #endif /* FIFO_QUEUE_H_ */
