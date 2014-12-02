@@ -1,147 +1,301 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "FIFo_Queue.h"
+#include <time.h>
+#include "Prio_Queue.h"
+#include "Simulation_Engine.h"
 
-#define COUnits 500 //number of units to process before doing a changeover to the other type
+#define COUnits 100 //number of units to process before doing a changeover to the other type
 #define RIGHT 1
 #define LEFT 0
+
 int COCounter = 1; //counter to keep track of the number of units processed before making a changeover
 int ass;
-int Time = 0; //running tally of the total time to complete the entire simulation
-int shipmentLeft = 0;
-int shipmentRight = 0;
+double Time = 0.0; //running tally of the total time to complete the entire simulation
+double now = 0.0;
+int ctr = 0;
 
-typedef enum {Stamping, SWeld1, SWeld2, LeftAssem, RightAssem, Shipping} KindsOfEvents;
+//Variables to keep track of the number of shipments that are output
+int shipmentLeft = 0;
+int leftctr = 0;
+int shipmentRight = 0;
+int rightctr = 0;
+int OutgoingShipments = 0;
+
+//Variables to keep track of the endtime of a given process to accurately schedule the new process
+double sw1_endtime = 0.0;
+double sw2_endtime = 0.0;
+double assleft_endtime = 0.0;
+double assright_endtime = 0.0;
+
+//list of variables that will give the max length in each queue throughout the simulation
+int sweld1_q = 0;
+int sweld1_max = 0;
+int sweld2_q = 0;
+int sweld2_max = 0;
+int assleft_q = 0;
+int assleft_max = 0;
+int assright_q = 0;
+int assright_max = 0;
+
+//Data structure definition
+typedef enum {Stamp, SWeld1, SWeld2, LeftAssem, RightAssem, Ship} KindsOfEvents;
 typedef enum {Left, Right} AssemblyType;
 struct Data{
-    int timestamp;
+    double timestamp;
     int unitnum; //number of the unit
     KindsOfEvents Process;
     AssemblyType Assembly;
-
-
-    struct Data *next;
 };
 
-int main(void){
+//Function declarations
+void Stamping(struct Data *e);
+void SpotWeld1(struct Data *e);
+void SpotWeld2(struct Data *e);
+void LeftAssembly(struct Data *e);
+void RightAssembly(struct Data *e);
+void Shipping(struct Data *e);
+
+int main(int argc, char *argv[]){
+    /*if (argc != 2) {
+		fprintf (stderr, "usage: program order_number\n");
+		exit (1);
+    }
+    if ((sscanf(argv[1],"%d", &num_units)) == NULL) {
+		fprintf (stderr, "need to enter a total order number\n", argv[1]);
+		exit (1);
+    }*/
+
     srand(time(NULL)); //seed the random function once
     //Randomly assign the first batch of assemblies as either left or right
-    rorl = (double)rand()/(double)RAND_MAX;
+    struct Data *e;
+	e = malloc(sizeof(struct Data));
+	if (e==NULL) {
+		printf("Memory not available\n");
+		exit(1);
+	}
+
+	//use random numbers to determine initially whether to process right or left assembly
+    double rorl = (double)rand()/(double)RAND_MAX;
     if (rorl > 0.5){
         ass = RIGHT;
+        e->Assembly = Right;
     }
     else if (rorl <= 0.5){
         ass = LEFT;
+        e->Assembly = Left;
+    }
+    e->unitnum = COCounter;
+    e->Process = Stamp;
+    schedule(now, e, (void *)Stamping);
+    // this loop will call the simulation for each unit that the customer has ordered.
+
+    int order_num = 3000; //argv[2];
+    while (ctr < order_num){
+        RunSim();
+        //printf("%d\n", ctr); ok produces 10000
     }
 
+    printf("Maximum queue lengths:\n");
+    printf("Spot Weld 1\t %d\n", sweld1_max);
+    printf("Spot Weld 2\t %d\n", sweld2_max);
+    printf("Left Assembly\t %d\n", assleft_max);
+    printf("Right Assembly\t %d\n\n", assright_max);
+    printf("Total run time: %.2f days\n", now/(double)54000);
+    printf("Total shipments: %d\n", OutgoingShipments);
+
+    return 0;
 }
 
-
 void Stamping(struct Data *e){
-    if (e->Process != Stamping){
+    if (e->Process != Stamp){
         printf("UNEXPECTED EVENT TYPE\n\n");
         exit(1);
     }
 
+    double now = e->timestamp;
+    double CODone = 0.0; //variable to define when the changeover is done, if it occurs
+    double extratime = 0.0; //defines any additional time to be added due to a unit in process while another unit is placed into queue
+    double stamptime;
+    struct Data *f;
+	f = malloc(sizeof(struct Data));
+	if (f==NULL) {
+		printf("Memory not available\n");
+		exit(1);
+	}
+
     if (COCounter > COUnits){
+
         if (ass == RIGHT){
             ass = LEFT;
             e->Assembly = Left;
+            f->Assembly = Left;
         }
-        else if(ass == LEFT){
-            ass == RIGHT;
+        else{
+            ass = RIGHT;
             e->Assembly = Right;
+            f->Assembly = Right;
         }
-        Time = Time + 15*60; //Update the time to include the changeover that must occur (takes fifteen minutes)
+        CODone = now + 15.0*60.0; //Update the time to include the changeover that must occur (takes fifteen minutes)
         COCounter = 1;
+        e->unitnum = COCounter;
     }
-
-    //Now that the assembly condition is correct need to schedule the s.Weld 1 process, putting it into the FIFO queue for that process
-    Time = Time + 20; //the cycle time for stamping is 20 seconds, so add 20 sec to the total running time
-    e->Process = SWeld1;
+    else{
+        if (ass == RIGHT){
+            f->Assembly = Right;
+            //printf("RightAssembly\n");
+        }
+        else{
+            f->Assembly = Left;
+        }
+    }
     COCounter++;
-    addQ(e);
+    //struct for the next stamping event
+    f->unitnum = COCounter;
+    f->Process = Stamp;
+    stamptime = now + (double)20 + CODone;
+    f->timestamp = stamptime;
+    schedule(stamptime, f, (void *)Stamping);
+
+    //This is the time for the next sweld process
+    if (sw1_endtime > now){
+        extratime = sw1_endtime - now;
+    }
+    Time = now + (double)20 + (double)sweld1_q*(double)38 + extratime; //the cycle time for stamping is 20 seconds, so add 20 sec to the total running time
+    e->Process = SWeld1;
+    e->timestamp = Time;
+    sweld1_q++;
+    schedule(Time, e, (void *)SpotWeld1);
 }
 
 void SpotWeld1(struct Data *e){
-        if (e->Process != SWeld1){
+    now = e->timestamp;
+    if (sweld1_q > sweld1_max){
+        sweld1_max = sweld1_q;
+    }
+    sweld1_q--;
+    double extratime = 0.0;
+    if (e->Process != SWeld1){
         printf("UNEXPECTED EVENT TYPE\n\n");
         exit(1);
     }
 
-    Time = Time + 38; //process takes 38 seconds
-    e->Process = SWeld2;
+    if (sw2_endtime > now){
+        extratime = sw1_endtime - now;
+    }
 
-    InsertQueue(e);
+    sw1_endtime = now + (double)38; //process takes 38 seconds
+    Time = sw1_endtime + (double)sweld2_q*(double)45 + extratime; //calculate the time at which the unit will enter the next process
+    e->Process = SWeld2;
+    e->timestamp = Time;
+    sweld2_q++;
+    schedule(Time,e,(void *)SpotWeld2);
 }
 
 void SpotWeld2(struct Data *e){
-        if (e->Process != SWeld2){
+    now = e->timestamp;
+    double extratime = 0.0;
+    if (sweld2_q > sweld2_max){
+        sweld2_max = sweld2_q;
+    }
+    sweld2_q--;
+    if (e->Process != SWeld2){
         printf("UNEXPECTED EVENT TYPE\n\n");
         exit(1);
     }
-
-    Time = Time + 45; //process takes 38 seconds
+    sw2_endtime = now + (double)45; //process takes 38 seconds
     if (e->Assembly == Left){
         e->Process = LeftAssem;
+        if (assleft_endtime > now){
+            extratime = assleft_endtime - now;
+        }
+        Time = sw2_endtime + now + extratime;
+        e->timestamp = Time;
+        schedule(Time,e,(void *)LeftAssembly);
+        assleft_q++;
     }
     else if (e->Assembly == Right){
         e->Process = RightAssem;
+        if (assright_endtime > now){
+            extratime = assright_endtime - now;
+        }
+        Time = sw2_endtime + now + extratime;
+        e->timestamp = Time;
+        schedule(Time,e,(void *)RightAssembly);
+        assright_q++;
     }
-
-    InsertQueue(e);
 }
 
 void LeftAssembly(struct Data *e){
-        if (e->Process != LeftAssem){
+    now = e->timestamp;
+    if (assleft_q > assleft_max){
+        assleft_max = assleft_q;
+    }
+    assleft_q--;
+    if (e->Process != LeftAssem){
         printf("UNEXPECTED EVENT TYPE\n\n");
         exit(1);
     }
 
-    Time = Time + 61; //process takes 38 seconds
-    e->Process = Shipping;
-
-    InsertQueue(e);
+    Time = now + (double)61; //process takes 61 seconds
+    e->Process = Ship;
+    e->timestamp = Time;
+    schedule(Time,e,(void *)Shipping);
 }
 
 void RightAssembly(struct Data *e){
-        if (e->Process != RightAssem){
+    now = e->timestamp;
+    if (assright_q > assright_max){
+        assright_max = assright_q;
+    }
+    assright_q--;
+    if (e->Process != RightAssem){
         printf("UNEXPECTED EVENT TYPE\n\n");
         exit(1);
     }
 
-    Time = Time + 39; //process takes 38 seconds
-    e->Process = Shipping;
-
-    InsertQueue(e);
+    Time = now + (double)38; //process takes 38 seconds
+    e->Process = Ship;
+    schedule(Time,e,(void *)Shipping);
 }
 
 void Shipping(struct Data *e){
-    if (e->Process != Shipping){
+    now = e->timestamp;
+    if (e->Process != Ship){
         printf("UNEXPECTED EVENT TYPE\n\n");
         exit(1);
     }
-
-    Time = Time + 61; //process takes 38 seconds
-
-    if (e->Assembly == Left && e->unitnum == 500){
-        shipmentLeft++;
+    if (e->Assembly == Left){
+        leftctr++;
     }
-    else if (e->Assembly == Right && e->unitnum == 500){
+    else if (e->Assembly == Right){
+        rightctr++;
+    }
+
+    if (e->Assembly == Left && leftctr == 250){
+        shipmentLeft++;
+        leftctr = 0;
+        //printf("ShipLeft: %d\n",shipmentLeft);
+    }
+    else if (e->Assembly == Right && rightctr == 250){
         shipmentRight++;
+        rightctr = 0;
+        //printf("ShipRight: %d\n",shipmentRight);
     }
     if (shipmentLeft >= shipmentRight && shipmentRight != 0){
         OutgoingShipments++;
         shipmentLeft--;
         shipmentRight--;
-        printf("Shipment #%d time = %d\n", OutgoingShipments, Time);
+        printf("Shipment #%d time = %.2f days\n", OutgoingShipments, now/(double)54000); //use 54000 to indicate the total amount of working time for 2 8 hour shifts per day
     }
     if (shipmentRight >= shipmentLeft && shipmentLeft != 0){
         OutgoingShipments++;
         shipmentLeft--;
         shipmentRight--;
-        printf("Shipment #%d time = %d\n", OutgoingShipments, Time);
+        printf("Shipment #%d time = %.2f days\n", OutgoingShipments, now/(double)54000);
     }
 
+    ctr++;
+    //printf("%d\n", ctr);
+    free(e);
 }
