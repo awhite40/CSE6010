@@ -45,7 +45,7 @@ struct Event *add_event(void *a, struct Event *PrioQ){
     }else{
         //printf("else3\n");
         struct Event * temp=PrioQ;
-        while (temp->Next != NULL && e->timestamp > temp->Next->timestamp){
+        while (temp->Next != NULL && e->timestamp >= temp->Next->timestamp){
             temp=temp->Next;
         }
         e->Next=temp->Next;

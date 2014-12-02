@@ -109,12 +109,14 @@ int main(int argc, char *argv[]){
 }
 
 void Stamping(struct Data *e){
+    
     if (e->Process != Stamp){
         printf("UNEXPECTED EVENT TYPE\n\n");
         exit(1);
     }
 
     now = e->timestamp;
+    printf("Stamping starts at Now = %f\n",now);
     double downtime = 0.0;
     //double mod_now = now - (double)stamp_up_ctr*27000.0-22950.0;
     //if (mod_now > 0.0){
@@ -169,7 +171,7 @@ void Stamping(struct Data *e){
     int eff_q = sweld1_q;
     //This is the time for the next sweld process
     if (sw1_endtime > now+20.0){
-        extratime = sw1_endtime - now+20.0;
+        extratime = sw1_endtime - now-20.0;
     }
     else if (sw1_endtime < now+20.0 && (double)sweld1_q > 20.0/38.0){
         extratime = 38.0 - (now+20.0 - sw1_endtime);
@@ -181,10 +183,12 @@ void Stamping(struct Data *e){
     sweld1_q++;
     //printf("Time: %.2f\n", Time);
     schedule(Time, e, (void *)SpotWeld1);
+    //printf("Weld1 scheduled at %f\n",Time);
 }
 
 void SpotWeld1(struct Data *e){
     now = e->timestamp;
+    printf("Weld1 starts at Now = %f\n",now);
     Time = 0.0;
     if (sweld1_q > sweld1_max){
         sweld1_max = sweld1_q;
@@ -201,7 +205,7 @@ void SpotWeld1(struct Data *e){
 
     int eff_q = sweld2_q;
     if (sw2_endtime > now+38.0){
-        extratime = sw2_endtime - now+38.0;
+        extratime = sw2_endtime - now-38.0;
     }
     else if (sw2_endtime < now+38.0 && (double)sweld2_q > 38.0/45.0){
         extratime = 45.0 - (now+38.0 - sw2_endtime);
@@ -218,6 +222,7 @@ void SpotWeld1(struct Data *e){
 
 void SpotWeld2(struct Data *e){
     now = e->timestamp;
+    printf("Weld2 starts at Now = %f\n",now);
     Time = 0.0;
     double extratime = 0.0;
     if (sweld2_q > sweld2_max){
@@ -229,7 +234,7 @@ void SpotWeld2(struct Data *e){
         exit(1);
     }
     int eff_q = assleft_q;
-    sw2_endtime = now + (double)45; //process takes 38 seconds
+    sw2_endtime = now + (double)45; //process takes 45 seconds
     if (e->Assembly == Left){
         e->Process = LeftAssem;
         if (assleft_endtime > sw2_endtime){
@@ -242,6 +247,7 @@ void SpotWeld2(struct Data *e){
         Time = sw2_endtime + (double)eff_q*45.0 + extratime;
         e->timestamp = Time;
         schedule(Time,e,(void *)LeftAssembly);
+        //printf("schedule left at %f\n",Time);
         assleft_q++;
     }
     else if (e->Assembly == Right){
@@ -262,6 +268,7 @@ void SpotWeld2(struct Data *e){
 
 void LeftAssembly(struct Data *e){
     now = e->timestamp;
+    printf("Left starts at Now = %f\n",now);
     Time = 0.0;
     if (assleft_q > assleft_max){
         assleft_max = assleft_q;
@@ -273,6 +280,7 @@ void LeftAssembly(struct Data *e){
     }
 
     Time = now + (double)61; //process takes 61 seconds
+    assleft_endtime = Time;
     e->Process = Ship;
     e->timestamp = Time;
     schedule(Time,e,(void *)Shipping);
@@ -280,6 +288,7 @@ void LeftAssembly(struct Data *e){
 
 void RightAssembly(struct Data *e){
     now = e->timestamp;
+    printf("Right starts at Now = %f\n",now);
     Time = 0.0;
     if (assright_q > assright_max){
         assright_max = assright_q;
@@ -291,13 +300,15 @@ void RightAssembly(struct Data *e){
     }
 
     Time = now + (double)39; //process takes 38 seconds
+    assright_endtime = Time;
     e->Process = Ship;
     schedule(Time,e,(void *)Shipping);
 }
 
 void Shipping(struct Data *e){
     now = e->timestamp;
-    printf("unitnum: %d\n", e->unitnum);
+    printf("Ship starts at Now = %f\n",now);
+    //printf("unitnum: %d\n", e->unitnum);
     //printf("time: %.2f\n\n", e->timestamp);
 
     if (e->Process != Ship){
