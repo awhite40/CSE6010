@@ -17,8 +17,8 @@ int ctr = 0;
 int start = 0;
 int stamp_up_ctr = 1;
 int weld1_up_ctr = 1, weld2_up_ctr =1;
-double stamp_per = 0.15,weld1_per = 0.2,weld2_per = 0.2;
-double stamp_time = 20,weld1_time = 38, weld2_time = 45;
+double stamp_per = 0.15,weld1_per = 1,weld2_per = 0.52;
+double stamp_time = 20,weld1_time = 22, weld2_time = 29;
 double Stamp_change = 15*60;
 int stamp_ctr =0;
 //Variables to keep track of the number of shipments that are output
@@ -132,10 +132,11 @@ void Stamping(struct Data *e){
     //printf("%d\n",e->unitnum);
     now = e->timestamp;
     double downtime = 0.0;
-    double mod_now = now - (double)stamp_up_ctr*27000.0+22950.0;
+    double mod_now = now - (double)stamp_up_ctr*27000.0;
     if (mod_now > 0.0){
         downtime = stamp_per*27000;
         stamp_up_ctr++;
+        //printf("stamp down");
     }
 
     double CODone = 0.0; //variable to define when the changeover is done, if it occurs
@@ -195,13 +196,14 @@ void Stamping(struct Data *e){
     }
     
     double downtime_w1 = 0.0;
-    double mod_now_w1 = now - (double)weld1_up_ctr*27000.0+22950.0;
+    double mod_now_w1 = now - (double)weld1_up_ctr*27000.0;
     if (mod_now_w1 > 0.0){
         downtime_w1 = 27000*weld1_per;
         weld1_up_ctr++;
+        //printf("weld1 down");
     }
 
-    Time = now + stamp_time + (double)eff_q*(double)weld1_time + extratime + downtime; //the cycle time for stamping is 20 seconds, so add 20 sec to the total running time
+    Time = now + stamp_time + (double)eff_q*(double)weld1_time + extratime + downtime_w1; //the cycle time for stamping is 20 seconds, so add 20 sec to the total running time
     e->Process = SWeld1;
     e->timestamp = Time;
     sweld1_q++;
@@ -213,11 +215,12 @@ void Stamping(struct Data *e){
 
 void SpotWeld1(struct Data *e){
     now = e->timestamp;
-    double downtime = 0.0;
-    double mod_now = now - (double)weld2_up_ctr*27000.0-22950.0;
+    double downtime_w2 = 0.0;
+    double mod_now = now - (double)weld2_up_ctr*27000.0;
     if (mod_now > 0.0){
-        downtime = 27000*weld2_per;
+        downtime_w2 = 27000*weld2_per;
         weld2_up_ctr++;
+        //printf("Weld2 down");
     }
 
 
@@ -245,7 +248,7 @@ void SpotWeld1(struct Data *e){
     }
 
     sw1_endtime = now + (double)weld1_time; //process takes 38 seconds
-    Time = sw1_endtime + (double)eff_q*(double)weld2_time + extratime + downtime; //calculate the time at which the unit will enter the next process
+    Time = sw1_endtime + (double)eff_q*(double)weld2_time + extratime + downtime_w2; //calculate the time at which the unit will enter the next process
     e->Process = SWeld2;
     e->timestamp = Time;
     sweld2_q++;
