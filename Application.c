@@ -16,8 +16,9 @@ double now = 0.0;
 int ctr = 0;
 int stamp_up_ctr = 0;
 int weld1_up_ctr = 0, weld2_up_ctr =0;
-double stamp_per = 0.15,weld1_per = 0.16,weld2_per = 0.2;
+double stamp_per = 0.15,weld1_per = 0,weld2_per = 0;
 double stamp_time = 20,weld1_time = 38, weld2_time = 45;
+double Stamp_change = 15*60;
 
 //Variables to keep track of the number of shipments that are output
 int shipmentLeft = 0;
@@ -95,7 +96,7 @@ int main(int argc, char *argv[]){
     schedule(now, e, (void *)Stamping);
     // this loop will call the simulation for each unit that the customer has ordered.
 
-    int order_num = 4000; //argv[2];
+    int order_num = 4001; //argv[2];
     while (ctr < order_num){
         RunSim();
         //printf("%d\n", ctr); ok produces 10000
@@ -150,7 +151,7 @@ void Stamping(struct Data *e){
             e->Assembly = Right;
             f->Assembly = Right;
         }
-        CODone = 15.0*60.0; //Update the time to include the changeover that must occur (takes fifteen minutes)
+        CODone = Stamp_change; //Update the time to include the changeover that must occur (takes fifteen minutes)
         COCounter = 1;
         e->unitnum = COCounter;
     }
