@@ -17,8 +17,8 @@ int ctr = 0;
 int start = 0;
 int stamp_up_ctr = 1;
 int weld1_up_ctr = 1, weld2_up_ctr =1;
-double stamp_per = 0.15,weld1_per = 1,weld2_per = 0.52;
-double stamp_time = 20,weld1_time = 22, weld2_time = 29;
+double stamp_per = .15,weld1_per = 1,weld2_per = 0.2;
+double stamp_time = 20,weld1_time = 38, weld2_time = 45;
 double Stamp_change = 15*60;
 int stamp_ctr =0;
 //Variables to keep track of the number of shipments that are output
@@ -132,11 +132,11 @@ void Stamping(struct Data *e){
     //printf("%d\n",e->unitnum);
     now = e->timestamp;
     double downtime = 0.0;
-    double mod_now = now - (double)stamp_up_ctr*27000.0;
+    double mod_now = now - (double)stamp_up_ctr*28800.0*(1-stamp_per);
     if (mod_now > 0.0){
-        downtime = stamp_per*27000;
+        downtime = stamp_per*28800;
         stamp_up_ctr++;
-        //printf("stamp down");
+        //printf("stamp downtime = %f\n", downtime);
     }
 
     double CODone = 0.0; //variable to define when the changeover is done, if it occurs
@@ -178,6 +178,11 @@ void Stamping(struct Data *e){
     f->Process = Stamp;
 
     stamptime = now + (double)stamp_time + CODone + downtime;
+    if (downtime !=0) {
+        printf("stamptime = %f at time = %f\n",stamptime,now);
+    
+    }
+    
 
     //printf("Stamptime: %.2f\n", stamptime);
     f->timestamp = stamptime;
@@ -196,9 +201,9 @@ void Stamping(struct Data *e){
     }
     
     double downtime_w1 = 0.0;
-    double mod_now_w1 = now - (double)weld1_up_ctr*27000.0;
+    double mod_now_w1 = now - (double)weld1_up_ctr*28800.0*(1 - weld1_per);
     if (mod_now_w1 > 0.0){
-        downtime_w1 = 27000*weld1_per;
+        downtime_w1 = 28800*weld1_per;
         weld1_up_ctr++;
         //printf("weld1 down");
     }
@@ -216,9 +221,9 @@ void Stamping(struct Data *e){
 void SpotWeld1(struct Data *e){
     now = e->timestamp;
     double downtime_w2 = 0.0;
-    double mod_now = now - (double)weld2_up_ctr*27000.0;
+    double mod_now = now - (double)weld2_up_ctr*28800.0*(1-weld2_per);
     if (mod_now > 0.0){
-        downtime_w2 = 27000*weld2_per;
+        downtime_w2 = 28800*weld2_per;
         weld2_up_ctr++;
         //printf("Weld2 down");
     }
