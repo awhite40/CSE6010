@@ -14,9 +14,9 @@ int ass;
 double Time = 0.0; //running tally of the total time to complete the entire simulation
 double now = 0.0;
 int ctr = 0;
-int stamp_up_ctr = 0;
-int weld1_up_ctr = 0, weld2_up_ctr =0;
-double stamp_per = 0.15,weld1_per = 0,weld2_per = 0;
+int stamp_up_ctr = 1;
+int weld1_up_ctr = 1, weld2_up_ctr =1;
+double stamp_per = 0.15,weld1_per = 0.2,weld2_per = 0.2;
 double stamp_time = 20,weld1_time = 38, weld2_time = 45;
 double Stamp_change = 15*60;
 
@@ -96,7 +96,7 @@ int main(int argc, char *argv[]){
     schedule(now, e, (void *)Stamping);
     // this loop will call the simulation for each unit that the customer has ordered.
 
-    int order_num = 4001; //argv[2];
+    int order_num = 4002; //argv[2];
     while (ctr < order_num){
         RunSim();
         //printf("%d\n", ctr); ok produces 10000
@@ -122,8 +122,9 @@ void Stamping(struct Data *e){
 
     now = e->timestamp;
     //printf("Stamping starts at Now = %f\n",now);
+    
     double downtime = 0.0;
-    double mod_now = now - (double)stamp_up_ctr*27000.0-22950.0;
+    double mod_now = now - (double)stamp_up_ctr*27000.0+22950.0;
     if (mod_now > 0.0){
         downtime = stamp_per*27000;
         stamp_up_ctr++;
@@ -185,7 +186,7 @@ void Stamping(struct Data *e){
     
     
     double downtime_w1 = 0.0;
-    double mod_now_w1 = now - (double)weld1_up_ctr*27000.0-22950.0;
+    double mod_now_w1 = now - (double)weld1_up_ctr*27000.0+22950.0;
     if (mod_now_w1 > 0.0){
         downtime_w1 = 27000*weld1_per;
         weld1_up_ctr++;
@@ -203,6 +204,12 @@ void Stamping(struct Data *e){
 
 void SpotWeld1(struct Data *e){
     now = e->timestamp;
+    double downtime = 0.0;
+    double mod_now = now - (double)weld2_up_ctr*27000.0-22950.0;
+    if (mod_now > 0.0){
+        downtime = 27000*weld2_per;
+        weld2_up_ctr++;
+    }
     //printf("Weld1 starts at Now = %f\n",now);
     
     Time = 0.0;
@@ -229,7 +236,7 @@ void SpotWeld1(struct Data *e){
     }
 
     sw1_endtime = now + (double)weld1_time; //process takes 38 seconds
-    Time = sw1_endtime + (double)eff_q*(double)weld2_time + extratime; //calculate the time at which the unit will enter the next process
+    Time = sw1_endtime + (double)eff_q*(double)weld2_time + extratime + downtime; //calculate the time at which the unit will enter the next process
     e->Process = SWeld2;
     e->timestamp = Time;
     sweld2_q++;
@@ -238,12 +245,7 @@ void SpotWeld1(struct Data *e){
 
 void SpotWeld2(struct Data *e){
     now = e->timestamp;
-    double downtime = 0.0;
-    double mod_now = now - (double)weld2_up_ctr*27000.0-22950.0;
-    if (mod_now > 0.0){
-        downtime = 27000*weld2_per;
-        weld2_up_ctr++;
-    }
+    
     //printf("Weld2 starts at Now = %f\n",now);
     Time = 0.0;
     double extratime = 0.0;
