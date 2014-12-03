@@ -116,7 +116,7 @@ void Stamping(struct Data *e){
     }
 
     now = e->timestamp;
-    printf("Stamping starts at Now = %f\n",now);
+    //printf("Stamping starts at Now = %f\n",now);
     double downtime = 0.0;
     //double mod_now = now - (double)stamp_up_ctr*27000.0-22950.0;
     //if (mod_now > 0.0){
@@ -146,7 +146,7 @@ void Stamping(struct Data *e){
             e->Assembly = Right;
             f->Assembly = Right;
         }
-        CODone = now + 15.0*60.0; //Update the time to include the changeover that must occur (takes fifteen minutes)
+        CODone = 15.0*60.0; //Update the time to include the changeover that must occur (takes fifteen minutes)
         COCounter = 1;
         e->unitnum = COCounter;
     }
@@ -188,7 +188,7 @@ void Stamping(struct Data *e){
 
 void SpotWeld1(struct Data *e){
     now = e->timestamp;
-    printf("Weld1 starts at Now = %f\n",now);
+    //printf("Weld1 starts at Now = %f\n",now);
     Time = 0.0;
     if (sweld1_q > sweld1_max){
         sweld1_max = sweld1_q;
@@ -222,7 +222,7 @@ void SpotWeld1(struct Data *e){
 
 void SpotWeld2(struct Data *e){
     now = e->timestamp;
-    printf("Weld2 starts at Now = %f\n",now);
+    //printf("Weld2 starts at Now = %f\n",now);
     Time = 0.0;
     double extratime = 0.0;
     if (sweld2_q > sweld2_max){
@@ -268,7 +268,7 @@ void SpotWeld2(struct Data *e){
 
 void LeftAssembly(struct Data *e){
     now = e->timestamp;
-    printf("Left starts at Now = %f\n",now);
+    //printf("Left starts at Now = %f\n",now);
     Time = 0.0;
     if (assleft_q > assleft_max){
         assleft_max = assleft_q;
@@ -288,7 +288,7 @@ void LeftAssembly(struct Data *e){
 
 void RightAssembly(struct Data *e){
     now = e->timestamp;
-    printf("Right starts at Now = %f\n",now);
+    //printf("Right starts at Now = %f\n",now);
     Time = 0.0;
     if (assright_q > assright_max){
         assright_max = assright_q;
@@ -307,7 +307,7 @@ void RightAssembly(struct Data *e){
 
 void Shipping(struct Data *e){
     now = e->timestamp;
-    printf("Ship starts at Now = %f\n",now);
+    //printf("Ship starts at Now = %f\n",now);
     //printf("unitnum: %d\n", e->unitnum);
     //printf("time: %.2f\n\n", e->timestamp);
 
@@ -325,12 +325,12 @@ void Shipping(struct Data *e){
     if (e->Assembly == Left && leftctr == 250){
         shipmentLeft++;
         leftctr = 0;
-        printf("ShipLeft: %d\n",shipmentLeft);
+        printf("ShipLeft: %d\nTime = %f\n",shipmentLeft,now/(double)54000);
     }
     else if (e->Assembly == Right && rightctr == 250){
         shipmentRight++;
         rightctr = 0;
-        printf("ShipRight: %d\n",shipmentRight);
+        printf("ShipRight: %d\nTime = %f\n",shipmentRight,now/(double)54000);
     }
     if (shipmentLeft >= shipmentRight && shipmentRight != 0){
         OutgoingShipments++;
