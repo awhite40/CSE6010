@@ -5,7 +5,7 @@
 #include "Prio_Queue.h"
 #include "Simulation_Engine.h"
 
-#define COUnits 250 //number of units to process before doing a changeover to the other type
+#define COUnits 20 //number of units to process before doing a changeover to the other type
 #define RIGHT 1
 #define LEFT 0
 
@@ -17,8 +17,8 @@ int ctr = 0;
 int start = 0;
 int stamp_up_ctr = 1;
 int weld1_up_ctr = 1, weld2_up_ctr =1;
-double stamp_per = .15,weld1_per = 1,weld2_per = 0.2;
-double stamp_time = 20,weld1_time = 38, weld2_time = 45;
+double stamp_per = .15,weld1_per = 0.,weld2_per = 0.68;
+double stamp_time = 20,weld1_time = 38, weld2_time = 21;
 double Stamp_change = 15*60;
 int stamp_ctr =0;
 //Variables to keep track of the number of shipments that are output
@@ -159,7 +159,7 @@ void Stamping(struct Data *e){
             ass = RIGHT;
             f->Assembly = Right;
         }
-        CODone = 15.0*60.0; //Update the time to include the changeover that must occur (takes fifteen minutes)
+        CODone = Stamp_change; //Update the time to include the changeover that must occur (takes fifteen minutes)
         //printf("%d\n", COCounter);
         COCounter = 1;
         //e->unitnum = COCounter;
@@ -178,10 +178,10 @@ void Stamping(struct Data *e){
     f->Process = Stamp;
 
     stamptime = now + (double)stamp_time + CODone + downtime;
-    if (downtime !=0) {
+    /*if (downtime !=0) {
         printf("stamptime = %f at time = %f\n",stamptime,now);
     
-    }
+    }*/
     
 
     //printf("Stamptime: %.2f\n", stamptime);
